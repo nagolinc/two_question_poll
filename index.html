@@ -28,6 +28,10 @@
         td:first-child {
             font-weight: bold;
         }
+
+        #score {
+            font-weight: bold;
+        }
     </style>
 
 
@@ -45,7 +49,7 @@
 <body>
 
 
-    <button onclick="calculate()">Calculate</button>
+    <button onclick="calculate(true)">Calculate</button>
 
     <div id="two_question_table">
 
@@ -180,8 +184,9 @@
         let sigmaScores = [];
         let statsText = "";
 
-        function calculate() {
+        function calculate(e) {
 
+            console.log(e)
 
 
             const n = parseInt(document.getElementById('n').value);
@@ -266,7 +271,7 @@
 
             statsText = "This Poll has a " + probability.toFixed(2) + "% chance of being random."
 
-            capture()
+            capture(e)
         }
 
         function showPopup(row, col) {
@@ -290,7 +295,7 @@
 
         function updateTweetButton(newHref) {
 
-            
+
             // Create a new anchor element
             let newButton = document.createElement("a");
             newButton.setAttribute("class", "twitter-share-button");
@@ -306,14 +311,25 @@
             twttr.widgets.load();
 
             //clean up all iframes expect the last one
-            let iframes = document.getElementsByTagName("iframe");
-            for (let i = 0; i < iframes.length - 1; i++) {
-                iframes[i].remove();
+            //apparently we have to wait to do this until after the new button is created
+            function cleanUp() {
+                let iframes = document.querySelectorAll("iframe")
+                console.log("iframes", iframes)
+                for (let i = 0; i < iframes.length - 1; i++) {
+                    iframes[i].remove()
+                }
+                console.log("done cleaning")
             }
+
+            setTimeout(cleanUp, 100)
+            
+            
         }
 
-        async function capture() {
-            const canvas = await html2canvas(document.body);
+        async function capture(e) {
+            const canvas = await html2canvas(document.getElementById("two_question_table"), {
+                width: 600 // Set the canvas width here
+            });
             const imgData = canvas.toDataURL();
 
             // Assume that you have the statistics text in a variable called statsText.
@@ -325,6 +341,13 @@
             const newHref = `https://twitter.com/intent/tweet?text=${encodedStatsText}`;
             // we also need to include url = ${window.location.href}?image=yourImageID
             //const newHref = `https://twitter.com/intent/tweet?text=${encodedStatsText}&url=${window.location.href}?image=yourImageID`;
+
+            //open the image in a new window for sharing
+            console.log("captured",e)
+            //if e is literally true (happens when we press the button)
+            if (e === true) {
+                window.open(imgData);
+            }
 
 
             updateTweetButton(newHref);
