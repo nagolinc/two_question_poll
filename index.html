@@ -117,6 +117,9 @@
 
 
 
+
+
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-statistics/7.7.0/simple-statistics.min.js"></script>
 
 
@@ -286,10 +289,8 @@
 
 
         function updateTweetButton(newHref) {
-            // Remove the existing Twitter iframe
-            let existingFrame = document.getElementById("twitter-widget-0");
-            if (existingFrame) existingFrame.remove();
 
+            
             // Create a new anchor element
             let newButton = document.createElement("a");
             newButton.setAttribute("class", "twitter-share-button");
@@ -303,6 +304,12 @@
 
             // Reinitialize Twitter widgets to convert anchor to iframe/button
             twttr.widgets.load();
+
+            //clean up all iframes expect the last one
+            let iframes = document.getElementsByTagName("iframe");
+            for (let i = 0; i < iframes.length - 1; i++) {
+                iframes[i].remove();
+            }
         }
 
         async function capture() {
@@ -315,10 +322,10 @@
             console.log("tweeting", encodedStatsText, imgData)
 
             //const newHref = `https://twitter.com/intent/tweet?text=${encodedStatsText}&url=${imgData}`;
-            //const newHref = `https://twitter.com/intent/tweet?text=${encodedStatsText}`;
+            const newHref = `https://twitter.com/intent/tweet?text=${encodedStatsText}`;
             // we also need to include url = ${window.location.href}?image=yourImageID
-            const newHref = `https://twitter.com/intent/tweet?text=${encodedStatsText}&url=${window.location.href}?image=yourImageID`;
-            
+            //const newHref = `https://twitter.com/intent/tweet?text=${encodedStatsText}&url=${window.location.href}?image=yourImageID`;
+
 
             updateTweetButton(newHref);
         };
