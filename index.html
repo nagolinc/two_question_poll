@@ -139,12 +139,24 @@
             return decodeURIComponent(results[2].replace(/\+/g, ' '));
         }
 
-        // Update twitter:image meta tag
-        const imageParam = getParameterByName('image');
-        if (imageParam) {
-            const imageUrl = `http://www.example.com/${imageParam}.jpg`; // Build the full image URL
-            document.getElementById('twitterImageMeta').setAttribute('content', imageUrl);
-        }
+        // Add these lines after your getParameterByName function
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const urlValue00 = getParameterByName('value00');
+            const urlValue01 = getParameterByName('value01');
+            const urlValue10 = getParameterByName('value10');
+            const urlValue11 = getParameterByName('value11');
+            const urlN = getParameterByName('n');
+
+            if (urlValue00 !== null) value00Input.value = urlValue00;
+            if (urlValue01 !== null) value01Input.value = urlValue01;
+            if (urlValue10 !== null) value10Input.value = urlValue10;
+            if (urlValue11 !== null) value11Input.value = urlValue11;
+            if (urlN !== null) nInput.value = urlN;
+
+            calculate();
+        });
+
+
 
 
 
@@ -188,6 +200,15 @@
 
             console.log(e)
 
+            // Add these lines at the end of your calculate function
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('value00', value00Input.value);
+            newUrl.searchParams.set('value01', value01Input.value);
+            newUrl.searchParams.set('value10', value10Input.value);
+            newUrl.searchParams.set('value11', value11Input.value);
+            newUrl.searchParams.set('n', nInput.value);
+            window.history.replaceState(null, null, newUrl.toString());
+
 
             const n = parseInt(document.getElementById('n').value);
 
@@ -209,9 +230,6 @@
             if (isNaN(value00) || isNaN(value01) || isNaN(value10) || isNaN(value11)) {
                 return
             }
-
-
-
 
             const expected00 = (value00 + value01) * (value00 + value10) / n;
             const expected01 = (value00 + value01) * (value01 + value11) / n;
@@ -322,8 +340,8 @@
             }
 
             setTimeout(cleanUp, 100)
-            
-            
+
+
         }
 
         async function capture(e) {
@@ -343,11 +361,14 @@
             //const newHref = `https://twitter.com/intent/tweet?text=${encodedStatsText}&url=${window.location.href}?image=yourImageID`;
 
             //open the image in a new window for sharing
-            console.log("captured",e)
+            console.log("captured", e)
             //if e is literally true (happens when we press the button)
             if (e === true) {
                 window.open(imgData);
             }
+
+            //also set twitter image meta tag
+            document.getElementById("twitterImageMeta").setAttribute("content", imgData);
 
 
             updateTweetButton(newHref);
