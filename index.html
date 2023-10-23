@@ -183,10 +183,19 @@
 
             const n = parseInt(document.getElementById('n').value);
 
-            const value00 = parseInt(value00Input.value) * n / 100;
-            const value01 = parseInt(value01Input.value) * n / 100;
-            const value10 = parseInt(value10Input.value) * n / 100;
-            const value11 = parseInt(value11Input.value) * n / 100;
+            let value00 = parseInt(value00Input.value) * n / 100;
+            let value01 = parseInt(value01Input.value) * n / 100;
+            let value10 = parseInt(value10Input.value) * n / 100;
+            let value11 = parseInt(value11Input.value) * n / 100;
+
+            //if the scores don't add up to 100%, normalize them
+            if (value00 + value01 + value10 + value11 != n) {
+                const total = value00 + value01 + value10 + value11;
+                value00 = value00 / total * n;
+                value01 = value01 / total * n;
+                value10 = value10 / total * n;
+                value11 = value11 / total * n;
+            }
 
             //return if any of the values are not numbers
             if (isNaN(value00) || isNaN(value01) || isNaN(value10) || isNaN(value11)) {
