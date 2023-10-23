@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2x2 Table Statistics</title>
+    <style>
+        td {
+            border: 1px solid black;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        #tableContainer {
+            margin-top: 20px;
+        }
+
+        #popupResult {
+            margin-top: 20px;
+            border: 1px solid black;
+            padding: 10px;
+            display: none;
+            /* initially hidden */
+        }
+
+        th,
+        td:first-child {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Question 2 YES</th>
+                <th>Question 1 NO</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Question 1 YES</td>
+                <td><input type="number" id="value00" placeholder="Enter value"></td>
+                <td><input type="number" id="value10" placeholder="Enter value"></td>
+            </tr>
+            <tr>
+                <td>Question 1 NO</td>
+                <td><input type="number" id="value01" placeholder="Enter value"></td>
+                <td><input type="number" id="value11" placeholder="Enter value"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    Votes:
+    <input type="number" id="n" placeholder="total votes">
+
+    <br>
+
+    <button onclick="calculate()">Calculate</button>
+
+    <div id="outputTable">
+        <table>
+            <thead>
+                <tr>
+                    <th></th> <!-- Empty cell for the top-left corner -->
+                    <th>Question 2 YES</th>
+                    <th>Question 2 NO</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Question 1 YES</td>
+                    <td onclick="showPopup(0,0)"></td>
+                    <td onclick="showPopup(0,1)"></td>
+                </tr>
+                <tr>
+                    <td>Question 1 NO</td>
+                    <td onclick="showPopup(1,0)"></td>
+                    <td onclick="showPopup(1,1)"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <p id="score"></p>
+
+    <div id="popupResult"></div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-statistics/7.7.0/simple-statistics.min.js"></script>
+
+
+    <script>
+
+        const value00Input = document.getElementById('value00');
+        const value01Input = document.getElementById('value01');
+        const value10Input = document.getElementById('value10');
+        const value11Input = document.getElementById('value11');
+        const cells = document.querySelectorAll('#outputTable tr td:nth-child(n+2):nth-child(-n+3)');
+        const scoreElement = document.getElementById('score');
+
+
+        function sigmaToColor(sigma) {
+            // Clamp the sigma value between -3 and 3 for our gradient's sake
+            const clampedSigma = Math.max(-3, Math.min(3, sigma));
+
+            // Calculate the percentage of the gradient
+            const gradientPercentage = (clampedSigma + 3) / 6; // Normalize value to [0, 1]
+
+            // Determine the green and red channel values
+            const green = gradientPercentage * 255;
+            const red = (1 - gradientPercentage) * 255;
+
+            return `rgb(${red}, ${green}, 0)`; // Convert to RGB color string
+        }
+
+        let expectedScores = [];
+        let actualScores = [];
+        let sigmaScores = [];
+
+        function calculate() {
+
+
+
+            const n = parseInt(document.getElementById('n').value);
+
+            const value00 = parseInt(value00Input.value) * n / 100;
+            const value01 = parseInt(value01Input.value) * n / 100;
+            const value10 = parseInt(value10Input.value) * n / 100;
+            const value11 = parseInt(value11Input.value) * n / 100;
+
+
+
+
+            const expected00 = (value00 + value01) * (value00 + value10) / n;
+            const expected01 = (value00 + value01) * (value01 + value11) / n;
+            const expected10 = (value10 + value11) * (value00 + value10) / n;
+            const expected11 = (value10 + value11) * (value01 + value11) / n;
+
+
+            expectedScores = [expected00, expected01, expected10, expected11];
+
+            actualScores = [value00, value01, value10, value11]
+
+            sigmaScores = [];
+
+            let t = 0
+            for (let cell of cells) {
+                const actual = actualScores[t];
+                const expected = expectedScores[t];
+
+                const sigma = (actual - expected) / Math.sqrt(expected);
+                sigmaScores.push(sigma);
+
+                // Coloring based on sigma value
+                cell.style.backgroundColor = sigmaToColor(sigma);
+                cell.textContent = sigma.toFixed(2);
+                cell.dataset.sigma = sigma.toFixed(2);
+                cell.dataset.expected = expected.toFixed(2);
+
+                t = t + 1
+            }
+
+            console.log("huh?", expectedScores, actualScores, sigmaScores)
+
+
+
+            //xscore is the sum of all sigma scores squared
+            const xScore = sigmaScores.reduce((acc, curr) => acc + Math.pow(curr, 2), 0);
+
+
+            console.log("xScore", xScore)
+
+            let data=[[value00, value01],[value10, value11]]
+
+            let xSquarecdf=ss.chiSquaredDistributionTable[1] //this is a table of the form {p:score} where p is the probability and score is the xscore
+            //find the probability of the xscore by finding the closest x value in the table that is less than the xscore
+            let result=0
+            for (key in xSquarecdf){
+                if (xSquarecdf[key]<xScore){
+                    result=Number(key)
+                }
+            }
+
+
+            console.log("result",result)
+
+            const probability = (result) * 100; // assuming 1 degree of freedom for 2x2 table
+            scoreElement.textContent = `X-Square Score: ${xScore.toFixed(2)}, Probability: ${probability.toFixed(2)}% (lower=less likely to be random)`;
+        }
+
+        function showPopup(row, col) {
+
+            let i = row * 2 + col;
+            let actual = actualScores[i].toFixed(0)
+            let expected = expectedScores[i].toFixed(0)
+            let sigma = sigmaScores[i].toFixed(2)
+
+
+            // Display results in the div instead of using alert
+            const resultDiv = document.getElementById('popupResult');
+            resultDiv.innerHTML = `
+                <strong>Actual:</strong> ${actual}<br>
+                <strong>Expected:</strong> ${expected}<br>
+                <strong>Sigma:</strong> ${sigma}
+            `;
+            resultDiv.style.display = 'block'; // Show the div
+        }
+
+    </script>
+</body>
+
+</html>
