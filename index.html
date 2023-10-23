@@ -29,69 +29,92 @@
             font-weight: bold;
         }
     </style>
+
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Page Title">
+    <meta name="twitter:description" content="Page description">
+    <meta id="twitterImageMeta" name="twitter:image" content="">
 </head>
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
 
 <body>
 
 
-    <table border="1">
-        <thead>
-            <tr>
-                <th></th>
-                <th>Question 2 YES</th>
-                <th>Question 1 NO</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Question 1 YES</td>
-                <td><input type="number" id="value00" placeholder="Enter value"></td>
-                <td><input type="number" id="value10" placeholder="Enter value"></td>
-            </tr>
-            <tr>
-                <td>Question 1 NO</td>
-                <td><input type="number" id="value01" placeholder="Enter value"></td>
-                <td><input type="number" id="value11" placeholder="Enter value"></td>
-            </tr>
-        </tbody>
-    </table>
-
-    Votes:
-    <input type="number" id="n" placeholder="total votes">
-
-    <br>
-
     <button onclick="calculate()">Calculate</button>
 
-    <div id="outputTable">
-        <table>
+    <div id="two_question_table">
+
+
+        <table border="1">
             <thead>
                 <tr>
-                    <th></th> <!-- Empty cell for the top-left corner -->
+                    <th></th>
                     <th>Question 2 YES</th>
-                    <th>Question 2 NO</th>
+                    <th>Question 1 NO</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>Question 1 YES</td>
-                    <td onclick="showPopup(0,0)"></td>
-                    <td onclick="showPopup(0,1)"></td>
+                    <td><input type="number" id="value00" placeholder="Enter value"></td>
+                    <td><input type="number" id="value10" placeholder="Enter value"></td>
                 </tr>
                 <tr>
                     <td>Question 1 NO</td>
-                    <td onclick="showPopup(1,0)"></td>
-                    <td onclick="showPopup(1,1)"></td>
+                    <td><input type="number" id="value01" placeholder="Enter value"></td>
+                    <td><input type="number" id="value11" placeholder="Enter value"></td>
                 </tr>
             </tbody>
         </table>
+
+        Votes:
+        <input type="number" id="n" placeholder="total votes">
+
+        <br>
+
+
+
+        <div id="outputTable">
+            <table>
+                <thead>
+                    <tr>
+                        <th></th> <!-- Empty cell for the top-left corner -->
+                        <th>Question 2 YES</th>
+                        <th>Question 2 NO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Question 1 YES</td>
+                        <td onclick="showPopup(0,0)"></td>
+                        <td onclick="showPopup(0,1)"></td>
+                    </tr>
+                    <tr>
+                        <td>Question 1 NO</td>
+                        <td onclick="showPopup(1,0)"></td>
+                        <td onclick="showPopup(1,1)"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+
+
+        <p id="score"></p>
+
+
     </div>
 
-
-
-    <p id="score"></p>
-
     <div id="popupResult"></div>
+
+    <a id="b" class="twitter-share-button" href="https://twitter.com/intent/tweet">
+        Tweet</a>
+
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-statistics/7.7.0/simple-statistics.min.js"></script>
@@ -99,10 +122,38 @@
 
     <script>
 
+        // Function to get URL parameter
+        function getParameterByName(name, url = window.location.href) {
+            name = name.replace(/[\[\]]/g, '\\$&');
+            const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        // Update twitter:image meta tag
+        const imageParam = getParameterByName('image');
+        if (imageParam) {
+            const imageUrl = `http://www.example.com/${imageParam}.jpg`; // Build the full image URL
+            document.getElementById('twitterImageMeta').setAttribute('content', imageUrl);
+        }
+
+
+
+
         const value00Input = document.getElementById('value00');
         const value01Input = document.getElementById('value01');
         const value10Input = document.getElementById('value10');
         const value11Input = document.getElementById('value11');
+        const nInput = document.getElementById('n');
+
+        //call calculate whenever one of the inputs changes
+        for (let input of [value00Input, value01Input, value10Input, value11Input, nInput]) {
+            input.addEventListener('change', calculate);
+        }
+
+
         const cells = document.querySelectorAll('#outputTable tr td:nth-child(n+2):nth-child(-n+3)');
         const scoreElement = document.getElementById('score');
 
@@ -124,6 +175,7 @@
         let expectedScores = [];
         let actualScores = [];
         let sigmaScores = [];
+        let statsText = "";
 
         function calculate() {
 
@@ -135,6 +187,11 @@
             const value01 = parseInt(value01Input.value) * n / 100;
             const value10 = parseInt(value10Input.value) * n / 100;
             const value11 = parseInt(value11Input.value) * n / 100;
+
+            //return if any of the values are not numbers
+            if (isNaN(value00) || isNaN(value01) || isNaN(value10) || isNaN(value11)) {
+                return
+            }
 
 
 
@@ -178,22 +235,26 @@
 
             console.log("xScore", xScore)
 
-            let data=[[value00, value01],[value10, value11]]
+            let data = [[value00, value01], [value10, value11]]
 
-            let xSquarecdf=ss.chiSquaredDistributionTable[1] //this is a table of the form {p:score} where p is the probability and score is the xscore
+            let xSquarecdf = ss.chiSquaredDistributionTable[1] //this is a table of the form {p:score} where p is the probability and score is the xscore
             //find the probability of the xscore by finding the closest x value in the table that is less than the xscore
-            let result=0
-            for (key in xSquarecdf){
-                if (xSquarecdf[key]<xScore){
-                    result=Number(key)
+            let result = 0
+            for (key in xSquarecdf) {
+                if (xSquarecdf[key] < xScore) {
+                    result = Number(key)
                 }
             }
 
 
-            console.log("result",result)
+            console.log("result", result)
 
             const probability = (result) * 100; // assuming 1 degree of freedom for 2x2 table
             scoreElement.textContent = `X-Square Score: ${xScore.toFixed(2)}, Probability: ${probability.toFixed(2)}% (lower=less likely to be random)`;
+
+            statsText = "This Poll has a " + probability.toFixed(2) + "% chance of being random."
+
+            capture()
         }
 
         function showPopup(row, col) {
@@ -213,6 +274,46 @@
             `;
             resultDiv.style.display = 'block'; // Show the div
         }
+
+
+        function updateTweetButton(newHref) {
+            // Remove the existing Twitter iframe
+            let existingFrame = document.getElementById("twitter-widget-0");
+            if (existingFrame) existingFrame.remove();
+
+            // Create a new anchor element
+            let newButton = document.createElement("a");
+            newButton.setAttribute("class", "twitter-share-button");
+            newButton.setAttribute("id", "tweetBtn");
+            newButton.setAttribute("href", newHref);
+
+            console.log("newButton", newButton)
+
+            // Append the new button to a container (or directly to body)
+            document.body.appendChild(newButton);
+
+            // Reinitialize Twitter widgets to convert anchor to iframe/button
+            twttr.widgets.load();
+        }
+
+        async function capture() {
+            const canvas = await html2canvas(document.body);
+            const imgData = canvas.toDataURL();
+
+            // Assume that you have the statistics text in a variable called statsText.
+            const encodedStatsText = encodeURIComponent(statsText);
+
+            console.log("tweeting", encodedStatsText, imgData)
+
+            //const newHref = `https://twitter.com/intent/tweet?text=${encodedStatsText}&url=${imgData}`;
+            //const newHref = `https://twitter.com/intent/tweet?text=${encodedStatsText}`;
+            // we also need to include url = ${window.location.href}?image=yourImageID
+            const newHref = `https://twitter.com/intent/tweet?text=${encodedStatsText}&url=${window.location.href}?image=yourImageID`;
+            
+
+            updateTweetButton(newHref);
+        };
+
 
     </script>
 </body>
