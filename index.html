@@ -54,7 +54,7 @@
     <div id="two_question_table">
 
 
-        <table border="1">
+        <table border="1" id="inputTable">
             <thead>
                 <tr>
                     <th></th>
@@ -373,6 +373,44 @@
 
             updateTweetButton(newHref);
         };
+
+
+        // Make headers editable
+        const inputHeaders = document.querySelectorAll('#inputTable th');
+        for (let header of inputHeaders) {
+            header.contentEditable = true;
+        }
+
+        // Make the first cell of each tbody row editable
+        const inputRowHeaders = document.querySelectorAll('#inputTable tbody td:first-child');
+        for (let header of inputRowHeaders) {
+            header.contentEditable = true;
+        }
+
+        // Function to update the corresponding headers in outputTable
+        function updateOutputHeaders() {
+            const outputHeaders = document.querySelectorAll('#outputTable th:not(:first-child)');
+            const inputColHeaders = document.querySelectorAll('#inputTable th:not(:first-child)');
+
+            for (let i = 0; i < outputHeaders.length; i++) {
+                outputHeaders[i].textContent = inputColHeaders[i].textContent;
+            }
+
+            const outputRowHeaders = document.querySelectorAll('#outputTable td:first-child');
+            const inputRowHeaders = document.querySelectorAll('#inputTable tbody td:first-child');
+
+            for (let i = 0; i < outputRowHeaders.length; i++) {
+                outputRowHeaders[i].textContent = inputRowHeaders[i].textContent;
+            }
+        }
+
+        // Add event listeners to headers to update outputTable when they are edited
+        for (let header of inputHeaders) {
+            header.addEventListener('input', updateOutputHeaders);
+        }
+        for (let header of inputRowHeaders) {
+            header.addEventListener('input', updateOutputHeaders);
+        }
 
 
     </script>
