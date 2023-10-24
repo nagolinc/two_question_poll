@@ -141,6 +141,9 @@
 
         // Add these lines after your getParameterByName function
         window.addEventListener('DOMContentLoaded', (event) => {
+
+            console.log("what??", window.location.href)
+
             const urlValue00 = getParameterByName('value00');
             const urlValue01 = getParameterByName('value01');
             const urlValue10 = getParameterByName('value10');
@@ -152,6 +155,8 @@
             if (urlValue10 !== null) value10Input.value = urlValue10;
             if (urlValue11 !== null) value11Input.value = urlValue11;
             if (urlN !== null) nInput.value = urlN;
+
+            console.log("huh?", urlValue00, urlValue01, urlValue10, urlValue11, urlN)
 
             calculate();
         });
@@ -435,12 +440,14 @@
         // Update URL parameters based on current header values
         function setURLParams() {
             const headers = getTableHeaders();
-            const params = new URLSearchParams();
-            params.set('col1', headers.colHeaders[0]);
-            params.set('col2', headers.colHeaders[1]);
-            params.set('row1', headers.rowHeaders[0]);
-            params.set('row2', headers.rowHeaders[1]);
-            window.history.replaceState({}, '', '?' + params.toString());
+            const currentParams = new URLSearchParams(window.location.search);
+
+            currentParams.set('col1', headers.colHeaders[0]);
+            currentParams.set('col2', headers.colHeaders[1]);
+            currentParams.set('row1', headers.rowHeaders[0]);
+            currentParams.set('row2', headers.rowHeaders[1]);
+
+            window.history.replaceState({}, '', '?' + currentParams.toString());
         }
 
         // Read URL parameters and set table headers
