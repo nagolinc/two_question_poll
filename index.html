@@ -285,7 +285,7 @@
             console.log("result", result)
 
             const probability = (result) * 100; // assuming 1 degree of freedom for 2x2 table
-            scoreElement.textContent = `X-Square Score: ${xScore.toFixed(2)}, Probability: ${probability.toFixed(2)}% (lower=less likely to be random)`;
+            scoreElement.textContent = `X-Square Score: ${xScore.toFixed(2)}, Probability: ${probability.toFixed(2)}% (lower probability = less likely to be random)`;
 
             statsText = "This Poll has a " + probability.toFixed(2) + "% chance of being random."
 
@@ -387,6 +387,24 @@
             header.contentEditable = true;
         }
 
+        // Function to get headers from the input table
+        function getTableHeaders() {
+            const colHeaders = [
+                document.querySelector('#inputTable th:nth-child(2)').textContent,
+                document.querySelector('#inputTable th:nth-child(3)').textContent
+            ];
+
+            const rowHeaders = [
+                document.querySelector('#inputTable tbody tr:nth-child(1) td:nth-child(1)').textContent,
+                document.querySelector('#inputTable tbody tr:nth-child(2) td:nth-child(1)').textContent
+            ];
+
+            return {
+                colHeaders: colHeaders,
+                rowHeaders: rowHeaders
+            };
+        }
+
         // Function to update the corresponding headers in outputTable
         function updateOutputHeaders() {
             const outputHeaders = document.querySelectorAll('#outputTable th:not(:first-child)');
@@ -402,6 +420,8 @@
             for (let i = 0; i < outputRowHeaders.length; i++) {
                 outputRowHeaders[i].textContent = inputRowHeaders[i].textContent;
             }
+
+            setURLParams();
         }
 
         // Add event listeners to headers to update outputTable when they are edited
@@ -411,6 +431,39 @@
         for (let header of inputRowHeaders) {
             header.addEventListener('input', updateOutputHeaders);
         }
+
+        // Update URL parameters based on current header values
+        function setURLParams() {
+            const headers = getTableHeaders();
+            const params = new URLSearchParams();
+            params.set('col1', headers.colHeaders[0]);
+            params.set('col2', headers.colHeaders[1]);
+            params.set('row1', headers.rowHeaders[0]);
+            params.set('row2', headers.rowHeaders[1]);
+            window.history.replaceState({}, '', '?' + params.toString());
+        }
+
+        // Read URL parameters and set table headers
+        function getURLParamsAndSetHeaders() {
+            const params = new URLSearchParams(window.location.search);
+            const col1 = params.get('col1');
+            const col2 = params.get('col2');
+            const row1 = params.get('row1');
+            const row2 = params.get('row2');
+
+            if (col1) document.querySelector('#inputTable th:nth-child(2)').textContent = col1;
+            if (col2) document.querySelector('#inputTable th:nth-child(3)').textContent = col2;
+            if (row1) document.querySelector('#inputTable tbody tr:nth-child(1) td:nth-child(1)').textContent = row1;
+            if (row2) document.querySelector('#inputTable tbody tr:nth-child(2) td:nth-child(1)').textContent = row2;
+
+            // After setting headers from URL, update output table
+            updateOutputHeaders();
+        }
+
+        // Call the function to read and set URL parameters when the document is loaded
+        document.addEventListener("DOMContentLoaded", function () {
+            getURLParamsAndSetHeaders();
+        });
 
 
     </script>
